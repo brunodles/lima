@@ -65,6 +65,9 @@ main() {
     help|-h|-*)
       help
     ;;
+    print)
+      print
+    ;;
     *)
       dc $@
     ;;
@@ -245,6 +248,62 @@ Helpers:
   version                 Show the version of this helper
 
   <any>                   Will be passed into docker-compose
+
+TEXT
+}
+
+print() {
+# generated with
+# http://www.text-image.com/convert/pic2ascii.cgi
+# http://patorjk.com/software/taag/#p=display&f=Sub-Zero&t=Lima
+  cat <<"TEXT"
+
+     `-::-`
+    .ssssss+-`
+    /ss:.-:oso:`
+    .oo+../sssso/`
+     `+o+ossyyssso:
+      `/oooosssysss+`
+        -+ooossssssso-
+         ./+ooosssssso:`
+           ./++ooosssss+.
+             ./+oooosssso/`
+               `:++oossssso-
+                 `:+oossssss/`
+                   `:+oossssssoo/`
+                     `-+oossysso/`
+                       `:osssos/`.
+                        `+oooo++//:.
+                        `-/-`.+/////:`
+                             `-///////:`
+                               `:////+oo-
+                                 ./++oooo+.
+                                   -+oooooo/`
+                                    `:ooooooo:`
+                                      `+ooooooo-
+                                        -+oooooo+.
+                                         `:ooooooo/`
+                                           `/oooo+oo:`
+                                             .+oooooo+-
+                                               -ooooooo+.
+                                                `:ooooooo/`
+                                                  `/soooooo-
+                                                    .+oooooo+.
+                                                      -+oooooo/`
+                                                        -ooooooo-
+                                                         `:ooo++o+.
+                                                           `/ooo++o:`
+                                                             ./oo++++.
+                                                               ./oo++o/`
+                                                                 -+oo+++-
+                                                                   -+oo+o/`
+                                                                     -+ooo+`
+                                                                       -+:`
+ __         __     __    __     ______
+/\ \       /\ \   /\ "-./  \   /\  __ \
+\ \ \____  \ \ \  \ \ \-./\ \  \ \  __ \
+ \ \_____\  \ \_\  \ \_\ \ \_\  \ \_\ \_\
+  \/_____/   \/_/   \/_/  \/_/   \/_/\/_/
 
 TEXT
 }
