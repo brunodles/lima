@@ -1,14 +1,23 @@
 #!/bin/bash
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose-test.yml
+declare CONTAINER=web
+declare TEST_CONTAINER=web
+declare LOG=false
 
-declare FILE=docker-compose.yml
-declare CONTAINER=server
+if [ -r .limafile ]; then
+  . .limafile
+fi
+
+declare FILE=$DEFAULT_FILE
 
 main() {
   case $1 in
     rspec)
       rspec ${@:2}
+    ;;
+    rake)
+      dc run $CONTAINER bundle exec rake ${@:2}
     ;;
     logs)
       logs ${@:2}
@@ -34,12 +43,21 @@ main() {
     uninstall)
       uninstall
     ;;
-    help|-h)
-      help
+    file)
+      create_file
+    ;;
+    env)
+      echo DEFAULT_FILE $DEFAULT_FILE
+      echo TEST_FILE $TEST_FILE
+      echo CONTAINER $CONTAINER
     ;;
     -t)
       FILE=$TEST_FILE
+      CONTAINER=$TEST_CONTAINER
       main ${@:2}
+    ;;
+    help|-h|-*)
+      help
     ;;
     *)
       dc $@
@@ -47,16 +65,27 @@ main() {
   esac
 }
 
+this(){
+  echo ${0##*/}
+}
+
+my_exec() {
+  if [ "$LOG" == "true" ]; then
+    echo "$@"
+  fi
+  $@
+}
+
 dc() {
-  docker-compose -f $FILE $@
+  my_exec docker-compose -f $FILE $@
 }
 
 dcd() {
-  docker-compose -f $DEFAULT_FILE $@
+  my_exec docker-compose -f $DEFAULT_FILE $@
 }
 
 dct() {
-  docker-compose -f $TEST_FILE $@
+  my_exec docker-compose -f $TEST_FILE $@
 }
 
 dce() {
@@ -82,7 +111,7 @@ find_container() {
 }
 
 rspec() {
-  dct run $CONTAINER bundle exec rspec $@
+  dct run $TEST_CONTAINER bundle exec rspec $@
 }
 
 logs() {
@@ -105,7 +134,7 @@ logs() {
 logs_clear() {
   if [ -z $@ ]; then
     echo "Need to inform a container, use:"
-    echo "${0##*/} logs clear <container name>"
+    echo "$(this) logs clear <container name>"
   else
     echo "Clear logs from [$@]"
     for container in $@; do
@@ -158,8 +187,59 @@ uninstall(){
   sudo rm $0
 }
 
+create_file() {
+  cat >> .limafile <<-FILE
+
+# This is a Sample .limafile
+
+DEFAULT_FILE=docker-compose.yml
+TEST_FILE=docker-compose-test.yml
+CONTAINER=web
+TEST_CONTAINER=web
+LOG=false
+FILE
+  chmod +x .limafile
+}
+
 help() {
-  echo "help"
+  cat <<-TEXT
+A wrapper tool to help to work with containers.
+
+Usage:
+  $(this) [-t] [helper] [command] [args]
+
+Options:
+  -t                      Use test file on docker-compose
+
+Helpers:
+  rspec                   Call docker-compose with test_file, so you just need to write the end of the command
+  rake                    Call docker-compose to execute a rake task
+
+  logs                    Show default container logs
+  logs all                Show all logs
+  logs clear <container>  Clear logs from container
+  logs <container>        Show logs for container
+
+  run                     Run the default container with bash command
+  run <container> <cmd>   Run the container with command
+  exec <container> <cmd>  Run the command on a running container
+
+  ps                      Call docker-compose with default and test files
+
+  stop                    Stop all containers
+  stop <container>        Stop the container
+  kill                    Kill all containers
+  kill <container>        Kill the container
+
+  intall                  Copy this bash to /usr/bin
+  uninstall               Remove this from /usr/bin
+  file                    Create the helper file, this will enable you to setup this tool
+
+  help                    Show this help
+  
+  <any>                   Will be passed into docker-compose
+
+TEXT
 }
 
 main $@
