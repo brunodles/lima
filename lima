@@ -1,5 +1,9 @@
 #!/bin/bash
+declare DEFAULT_FILE=docker-compose.yml
+declare TEST_FILE=docker-compose-test.yml
+
 declare FILE=docker-compose.yml
+declare CONTAINER=server
 
 main() {
   case $1 in
@@ -34,7 +38,7 @@ main() {
       help
     ;;
     -t)
-      FILE=docker-compose-test.yml
+      FILE=$TEST_FILE
       main ${@:2}
     ;;
     *)
@@ -48,11 +52,11 @@ dc() {
 }
 
 dcd() {
-  docker-compose -f docker-compose.yml $@
+  docker-compose -f $DEFAULT_FILE $@
 }
 
 dct() {
-  docker-compose -f docker-compose-test.yml $@
+  docker-compose -f $TEST_FILE $@
 }
 
 dce() {
@@ -78,18 +82,13 @@ find_container() {
 }
 
 rspec() {
-  if [ "$1" == "-k" ]; then
-    dct run --name test_runner server bash
-    dce test_runner bundle exec rspec ${@:2}
-  else
-    dct run server bundle exec rspec $@
-  fi
+  dct run $CONTAINER bundle exec rspec $@
 }
 
 logs() {
   case $1 in
     "")
-      dc logs -f --tail=100 server
+      dc logs -f --tail=100 $CONTAINER
     ;;
     all)
       dc logs -f --tail=100
@@ -128,7 +127,7 @@ clear_logs_from_container() {
 run() {
   case $1 in
     "")
-      dc run server bash
+      dc run $CONTAINER bash
     ;;
     *)
       dc run $1 bash ${@:2}
