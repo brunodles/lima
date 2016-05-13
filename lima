@@ -1,4 +1,6 @@
 #!/bin/bash
+declare FILE=docker-compose.yml
+
 main() {
   case $1 in
     rspec)
@@ -13,14 +15,14 @@ main() {
     "exec")
       dce ${@:2}
     ;;
-    up)
-      up ${@:2}
-    ;;
     ps)
       ps
     ;;
     stop)
       stop ${@:2}
+    ;;
+    kill)
+      kill ${@:2}
     ;;
     install)
       install
@@ -31,31 +33,30 @@ main() {
     help|-h)
       help
     ;;
+    -t)
+      FILE=docker-compose-test.yml
+      main ${@:2}
+    ;;
     *)
-      dcd $@
+      dc $@
     ;;
   esac
 }
 
 dc() {
-  docker-compose $@
-}
-
-dct() {
-  dc -f docker-compose-test.yml $@
+  docker-compose -f $FILE $@
 }
 
 dcd() {
-  dc -f docker-compose.yml $@
+  docker-compose -f docker-compose.yml $@
+}
+
+dct() {
+  docker-compose -f docker-compose-test.yml $@
 }
 
 dce() {
-  local cont;
-  if [ $1 == "-t" ]; then
-    cont=$(find_container "dcd ps" $2)
-  else
-    cont=$(find_container "dcd ps" $1)
-  fi
+  local cont=$(find_container "dc ps" $1)
   local cmd=$(find_command)
   echo 'docker exec -it '$cont $cmd
   docker exec -it $cont $cmd
@@ -88,29 +89,34 @@ rspec() {
 logs() {
   case $1 in
     "")
-      dcd logs -f --tail=100 server
+      dc logs -f --tail=100 server
     ;;
     all)
-      dcd logs -f --tail=100
+      dc logs -f --tail=100
     ;;
     clear)
       logs_clear ${@:2}
     ;;
     *)
-      dcd logs -f --tail=100 $@
+      dc logs -f --tail=100 $@
     ;;
   esac
 }
 
 logs_clear() {
-  echo "Clear logs from [$@]"
-  for container in $@; do
-    logs_clear_compose $container
-  done
+  if [ -z $@ ]; then
+    echo "Need to inform a container, use:"
+    echo "${0##*/} logs clear <container name>"
+  else
+    echo "Clear logs from [$@]"
+    for container in $@; do
+      logs_clear_compose $container
+    done
+  fi
 }
 
 logs_clear_compose() {
-  local cont=$(dcd ps | grep $1)
+  local cont=$(dc ps | grep $1)
   cont=${cont/%\ */}
   clear_logs_from_container $cont
 }
@@ -122,16 +128,12 @@ clear_logs_from_container() {
 run() {
   case $1 in
     "")
-      dcd run server bash
+      dc run server bash
     ;;
     *)
-      dcd run $1 bash ${@:2}
+      dc run $1 bash ${@:2}
     ;;
   esac
-}
-
-up() {
-  dcd up $@
 }
 
 ps() {
@@ -140,8 +142,13 @@ ps() {
 }
 
 stop() {
-  dct stop
-  dcd stop
+  dcd stop $@
+  dct stop $@
+}
+
+kill() {
+  dcd kill $@
+  dct kill $@
 }
 
 install() {
