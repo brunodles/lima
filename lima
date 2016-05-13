@@ -1,4 +1,5 @@
 #!/bin/bash
+readonly VERSION=1.0.0
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose-test.yml
 declare CONTAINER=web
@@ -55,6 +56,11 @@ main() {
       FILE=$TEST_FILE
       CONTAINER=$TEST_CONTAINER
       main ${@:2}
+    ;;
+    --version|version|-v)
+      local name=$(this)
+      # name=$(${name:0:1} | awk '{print toupper($0)})' ${name:1}
+      echo "${name^} version $VERSION"
     ;;
     help|-h|-*)
       help
@@ -236,7 +242,8 @@ Helpers:
   file                    Create the helper file, this will enable you to setup this tool
 
   help                    Show this help
-  
+  version                 Show the version of this helper
+
   <any>                   Will be passed into docker-compose
 
 TEXT
