@@ -1,0 +1,159 @@
+#!/bin/bash
+main() {
+  case $1 in
+    rspec)
+      rspec ${@:2}
+    ;;
+    logs)
+      logs ${@:2}
+    ;;
+    run)
+      run ${@:2}
+    ;;
+    "exec")
+      dce ${@:2}
+    ;;
+    up)
+      up ${@:2}
+    ;;
+    ps)
+      ps
+    ;;
+    stop)
+      stop ${@:2}
+    ;;
+    install)
+      install
+    ;;
+    uninstall)
+      uninstall
+    ;;
+    help|-h)
+      help
+    ;;
+    *)
+      dcd $@
+    ;;
+  esac
+}
+
+dc() {
+  docker-compose $@
+}
+
+dct() {
+  dc -f docker-compose-test.yml $@
+}
+
+dcd() {
+  dc -f docker-compose.yml $@
+}
+
+dce() {
+  local cont;
+  if [ $1 == "-t" ]; then
+    cont=$(find_container "dcd ps" $2)
+  else
+    cont=$(find_container "dcd ps" $1)
+  fi
+  local cmd=$(find_command)
+  echo 'docker exec -it '$cont $cmd
+  docker exec -it $cont $cmd
+}
+
+find_command() {
+  local cmd=$1
+  if [ -z $cmd ]; then
+    echo 'bash'
+  else
+    echo $@
+  fi
+}
+
+find_container() {
+  local cont=$($1 | grep $2)
+  cont=${cont/%\ */}
+  echo $cont
+}
+
+rspec() {
+  if [ "$1" == "-k" ]; then
+    dct run --name test_runner server bash
+    dce test_runner bundle exec rspec ${@:2}
+  else
+    dct run server bundle exec rspec $@
+  fi
+}
+
+logs() {
+  case $1 in
+    "")
+      dcd logs -f --tail=100 server
+    ;;
+    all)
+      dcd logs -f --tail=100
+    ;;
+    clear)
+      logs_clear ${@:2}
+    ;;
+    *)
+      dcd logs -f --tail=100 $@
+    ;;
+  esac
+}
+
+logs_clear() {
+  echo "Clear logs from [$@]"
+  for container in $@; do
+    logs_clear_compose $container
+  done
+}
+
+logs_clear_compose() {
+  local cont=$(dcd ps | grep $1)
+  cont=${cont/%\ */}
+  clear_logs_from_container $cont
+}
+
+clear_logs_from_container() {
+  sudo rm $(docker inspect $1 | grep -G '"LogPath": "*"' | sed -e 's/.*"LogPath": "//g' | sed -e 's/",//g');
+}
+
+run() {
+  case $1 in
+    "")
+      dcd run server bash
+    ;;
+    *)
+      dcd run $1 bash ${@:2}
+    ;;
+  esac
+}
+
+up() {
+  dcd up $@
+}
+
+ps() {
+  dcd ps
+  dct ps
+}
+
+stop() {
+  dct stop
+  dcd stop
+}
+
+install() {
+  sudo cp $0 /usr/bin
+}
+
+uninstall(){
+  sudo rm $0
+}
+
+help() {
+  echo "help"
+}
+
+main $@
