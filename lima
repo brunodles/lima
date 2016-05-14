@@ -32,6 +32,9 @@ main() {
     ps)
       ps
     ;;
+    clean)
+      clean ${@:2}
+    ;;
     stop)
       stop ${@:2}
     ;;
@@ -188,6 +191,17 @@ kill() {
   dct kill $@
 }
 
+clean() {
+  case $1 in
+    containers)
+      docker rm $(docker ps -a -q)
+    ;;
+    images)
+      docker rmi $(docker images | awk '/^<none>/ { print $3 }')
+    ;;
+  esac
+}
+
 install() {
   sudo cp $0 /usr/bin
 }
@@ -239,6 +253,9 @@ Helpers:
   stop <container>        Stop the container
   kill                    Kill all containers
   kill <container>        Kill the container
+
+  clean images            Remove all image
+  clean containers        Remove stoped containers
 
   intall                  Copy this bash to /usr/bin
   uninstall               Remove this from /usr/bin
@@ -293,17 +310,12 @@ print() {
                                                         -ooooooo-
                                                          `:ooo++o+.
                                                            `/ooo++o:`
-                                                             ./oo++++.
-                                                               ./oo++o/`
-                                                                 -+oo+++-
-                                                                   -+oo+o/`
-                                                                     -+ooo+`
-                                                                       -+:`
- __         __     __    __     ______
-/\ \       /\ \   /\ "-./  \   /\  __ \
-\ \ \____  \ \ \  \ \ \-./\ \  \ \  __ \
- \ \_____\  \ \_\  \ \_\ \ \_\  \ \_\ \_\
-  \/_____/   \/_/   \/_/  \/_/   \/_/\/_/
+ __         __     __    __     ______                       ./oo++++.
+/\ \       /\ \   /\ "-./  \   /\  __ \                        ./oo++o/`
+\ \ \____  \ \ \  \ \ \-./\ \  \ \  __ \                         -+oo+++-
+ \ \_____\  \ \_\  \ \_\ \ \_\  \ \_\ \_\                          -+oo+o/`
+  \/_____/   \/_/   \/_/  \/_/   \/_/\/_/                            -+ooo+`
+                                                                        -+:`
 
 TEXT
 }
