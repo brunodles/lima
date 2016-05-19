@@ -6,12 +6,6 @@ declare CONTAINER=web
 declare TEST_CONTAINER=web
 declare LOG=false
 
-if [ -r .limafile ]; then
-  . .limafile
-fi
-
-declare FILE=$DEFAULT_FILE
-
 main() {
   case $1 in
     rspec)
@@ -79,6 +73,17 @@ main() {
 
 this(){
   echo ${0##*/}
+}
+
+filename(){
+  echo ".$(this)file"
+}
+
+loadfile() {
+  local filename=$(filename)
+  if [ -r $filename ]; then
+    . $filename
+  fi
 }
 
 my_exec() {
@@ -320,4 +325,6 @@ print() {
 TEXT
 }
 
+loadfile
+declare FILE=$DEFAULT_FILE
 main $@
