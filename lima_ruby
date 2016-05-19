@@ -1,0 +1,50 @@
+#!/bin/bash
+main() {
+  case $1 in
+    rspec)
+      rspec ${@:2}
+    ;;
+    rake)
+      dc run $CONTAINER bundle exec rake ${@:2}
+    ;;
+    help|-h)
+      help
+    ;;
+  esac
+}
+
+rspec() {
+  case $1 in
+    up)
+      dct run --rm --name $(test_runner) $TEST_CONTAINER bash
+    ;;
+    rm)
+      # local cont="$(find_container $(test_runner))"
+      my_exec docker stop $(test_runner) >/dev/null 2>&1
+      my_exec docker rm $(test_runner) >/dev/null 2>&1
+    ;;
+    *)
+      local cont="$(find_container $(test_runner))"
+      if [ "$(is_running $cont)" == "true" ]; then
+        dce $(test_runner) bundle exec rspec $@
+      else
+        dct run $TEST_CONTAINER bundle exec rspec $@
+      fi
+    ;;
+  esac
+}
+
+kill() {
+  rspec rm
+}
+
+help() {
+  cat <<-TEXT
+Ruby-Helpers:
+  rspec                   Call docker-compose with test_file, so you just need to write the end of the command
+  rake                    Call docker-compose to execute a rake task
+TEXT
+}
+
+# source lima
+main $@

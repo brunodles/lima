@@ -1,5 +1,5 @@
 #!/bin/bash
-readonly VERSION=1.8.3
+readonly VERSION=2.0.0
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose-test.yml
 declare CONTAINER=web
@@ -8,12 +8,6 @@ declare LOG=false
 
 main() {
   case $1 in
-    rspec)
-      rspec ${@:2}
-    ;;
-    rake)
-      dc run $CONTAINER bundle exec rake ${@:2}
-    ;;
     logs)
       logs ${@:2}
     ;;
@@ -39,10 +33,10 @@ main() {
       kill ${@:2}
     ;;
     install)
-      install
+      install ${@:2}
     ;;
     uninstall)
-      uninstall
+      uninstall ${@:2}
     ;;
     file)
       create_file
@@ -68,14 +62,19 @@ main() {
     print)
       print
     ;;
-    *)
-      dc $@
+    dc)
+      dc ${@:2}
     ;;
   esac
+  $(this_path)/lima_ruby $@
 }
 
 this(){
   echo ${0##*/}
+}
+
+this_path(){
+  echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 }
 
 filename(){
@@ -144,27 +143,6 @@ is_running() {
   else
     echo "$(docker inspect -f {{.State.Running}} $1)"
   fi
-}
-
-rspec() {
-  case $1 in
-    up)
-      dct run --rm --name $(test_runner) $TEST_CONTAINER bash
-    ;;
-    rm)
-      # local cont="$(find_container $(test_runner))"
-      my_exec docker stop $(test_runner) >/dev/null 2>&1
-      my_exec docker rm $(test_runner) >/dev/null 2>&1
-    ;;
-    *)
-      local cont="$(find_container $(test_runner))"
-      if [ "$(is_running $cont)" == "true" ]; then
-        dce $(test_runner) bundle exec rspec $@
-      else
-        dct run $TEST_CONTAINER bundle exec rspec $@
-      fi
-    ;;
-  esac
 }
 
 logs() {
@@ -259,11 +237,45 @@ clean() {
 }
 
 install() {
-  sudo cp $0 /usr/bin
+  case $1 in
+    "")
+      sudo cp $0 /usr/bin
+    ;;
+    *)
+      install_module $1
+      if [ -z "$2" ]; then
+        install ${@:2}
+      fi
+    ;;
+  esac
+}
+
+install_module(){
+  local module="$(this)_$1"
+  echo ".add $module"
+  if [ -r "$module" ]; then
+    sudo cp $module /usr/bin
+  fi
 }
 
 uninstall(){
-  sudo rm $0
+  case $1 in
+    "")
+      sudo rm $0
+    ;;
+    *)
+      uninstall_module $1
+      if [ -z "$2" ]; then
+        uninstall ${@:2}
+      fi
+    ;;
+  esac
+}
+
+uninstall_module(){
+  local module="$(this)_$1"
+  echo ".remove $module"
+  sudo rm "/usr/bin/$module"
 }
 
 create_file() {
@@ -291,9 +303,6 @@ Options:
   -t                      Use test file on docker-compose
 
 Helpers:
-  rspec                   Call docker-compose with test_file, so you just need to write the end of the command
-  rake                    Call docker-compose to execute a rake task
-
   logs                    Show default container logs
   logs all                Show all logs
   logs clear <container>  Clear logs from container
@@ -322,7 +331,7 @@ Helpers:
   help                    Show this help
   version                 Show the version of this helper
 
-  <any>                   Will be passed into docker-compose
+  dc                      Will be passed into docker-compose
 
 TEXT
 }
@@ -379,5 +388,7 @@ TEXT
 }
 
 loadfile
+# source lima_ruby
 declare FILE=$DEFAULT_FILE
+export -f test_runner find_container is_running dct project_name my_exec
 main $@
