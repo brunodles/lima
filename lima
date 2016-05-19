@@ -106,8 +106,8 @@ dct() {
 }
 
 dce() {
-  local cont=$(find_container "dc ps" $1)
-  local cmd=$(find_command)
+  local cont=$(find_container $1)
+  local cmd=$(find_command ${@:2})
   echo 'docker exec -it '$cont $cmd
   docker exec -it $cont $cmd
 }
