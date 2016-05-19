@@ -192,7 +192,7 @@ run() {
       dc run $CONTAINER bash
     ;;
     *)
-      dc run $1 bash ${@:2}
+      dc run $@
     ;;
   esac
 }
