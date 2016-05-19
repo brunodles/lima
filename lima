@@ -147,7 +147,24 @@ is_running() {
 }
 
 rspec() {
-  dct run $TEST_CONTAINER bundle exec rspec $@
+  case $1 in
+    up)
+      dct run --rm --name $(test_runner) $TEST_CONTAINER bash
+    ;;
+    rm)
+      # local cont="$(find_container $(test_runner))"
+      my_exec docker stop $(test_runner) >/dev/null 2>&1
+      my_exec docker rm $(test_runner) >/dev/null 2>&1
+    ;;
+    *)
+      local cont="$(find_container $(test_runner))"
+      if [ "$(is_running $cont)" == "true" ]; then
+        dce $(test_runner) bundle exec rspec $@
+      else
+        dct run $TEST_CONTAINER bundle exec rspec $@
+      fi
+    ;;
+  esac
 }
 
 logs() {
@@ -227,6 +244,7 @@ stop() {
 kill() {
   dcd kill $@
   dct kill $@
+  rspec rm
 }
 
 clean() {
