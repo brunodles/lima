@@ -135,6 +135,14 @@ find_container() {
   echo $cont
 }
 
+is_running() {
+  if [ -z "$1" ]; then
+    echo "false"
+  else
+    echo "$(docker inspect -f {{.State.Running}} $1)"
+  fi
+}
+
 rspec() {
   dct run $TEST_CONTAINER bundle exec rspec $@
 }
