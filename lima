@@ -281,7 +281,7 @@ Helpers:
   clean images            Remove all image
   clean containers        Remove stoped containers
 
-  intall                  Copy this bash to /usr/bin
+  install                 Copy this bash to /usr/bin
   uninstall               Remove this from /usr/bin
   file                    Create the helper file, this will enable you to setup this tool
 
