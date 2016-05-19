@@ -266,8 +266,6 @@ uninstall(){
   sudo rm $0
 }
 
-
-
 create_file() {
   cat >> "$(filename)" <<-FILE
 
