@@ -122,7 +122,7 @@ find_command() {
 }
 
 find_container() {
-  local cont=$($1 | grep $2)
+  local cont=$(ps | grep $1)
   cont=${cont/%\ */}
   echo $cont
 }
