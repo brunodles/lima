@@ -390,5 +390,5 @@ TEXT
 loadfile
 # source lima_ruby
 declare FILE=$DEFAULT_FILE
-export -f test_runner find_container is_running dct project_name my_exec
+export -f loadfile filename this test_runner find_container is_running dct project_name my_exec
 main $@
