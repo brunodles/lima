@@ -215,8 +215,10 @@ uninstall(){
   sudo rm $0
 }
 
+
+
 create_file() {
-  cat >> .limafile <<-FILE
+  cat >> "$(filename)" <<-FILE
 
 # This is a Sample .limafile
 
