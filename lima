@@ -23,6 +23,9 @@ main() {
     "exec")
       dce ${@:2}
     ;;
+    up)
+      up ${@:2}
+    ;;
     ps)
       ps
     ;;
@@ -197,6 +200,19 @@ run() {
   esac
 }
 
+up() {
+  case $1 in
+    all|"")
+      dc up -d
+      logs all
+    ;;
+    *)
+      dc up -d ${@:2}
+      logs ${@:2}
+    ;;
+  esac
+}
+
 ps() {
   dcd ps
   echo "-"
@@ -267,6 +283,8 @@ Helpers:
   logs clear <container>  Clear logs from container
   logs <container>        Show logs for container
 
+  up                      Run all containers in daemon and start logs
+  up <containers>         Run selected containers in daemon and start logs
   run                     Run the default container with bash command
   run <container> <cmd>   Run the container with command
   exec <container> <cmd>  Run the command on a running container
