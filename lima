@@ -83,6 +83,10 @@ test_runner(){
   echo "${TEST_CONTAINER}_test_runner"
 }
 
+project_name(){
+  printf '%q\n' "${PWD##*/}" | sed -e 's/\-//g'
+}
+
 loadfile() {
   local filename=$(filename)
   if [ -r $filename ]; then
