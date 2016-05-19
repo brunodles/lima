@@ -79,6 +79,10 @@ filename(){
   echo ".$(this)file"
 }
 
+test_runner(){
+  echo "${TEST_CONTAINER}_test_runner"
+}
+
 loadfile() {
   local filename=$(filename)
   if [ -r $filename ]; then
