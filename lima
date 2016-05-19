@@ -110,7 +110,7 @@ dcd() {
 }
 
 dct() {
-  my_exec docker-compose -f $TEST_FILE $@
+  my_exec docker-compose -f $TEST_FILE -p "$(project_name)test" $@
 }
 
 dce() {
