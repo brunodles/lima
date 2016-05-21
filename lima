@@ -53,7 +53,6 @@ main() {
     ;;
     --version|version|-v)
       local name=$(this)
-      # name=$(${name:0:1} | awk '{print toupper($0)})' ${name:1}
       echo "${name^} version $VERSION"
     ;;
     help|-h|-*)
@@ -237,51 +236,76 @@ clean() {
 }
 
 install() {
-  case $1 in
-    "")
-      sudo cp $0 /usr/bin
-    ;;
-    *)
-      install_module $1
-      if [ -z "$2" ]; then
-        install ${@:2}
-      fi
-    ;;
-  esac
-}
-
-install_module(){
-  local module="$(this)_$1"
-  echo ".add $module"
-  if [ -r "$module" ]; then
-    sudo cp $module /usr/bin
-  fi
+  sudo cp $0 /usr/bin
 }
 
 uninstall(){
+  for module in ${MODULE_NAMES[@]} ; do
+    module_uninstall $module
+  done
+  sudo rm $0
+}
+
+module() {
   case $1 in
     "")
-      sudo rm $0
+      module_list
     ;;
-    *)
-      uninstall_module $1
-      if [ -z "$2" ]; then
-        uninstall ${@:2}
-      fi
+    -l)
+      echo "Modules to install: ${MODULE_NAMES[@]}"
+    ;;
+    -i)
+      module_install $2
+      # if [ -z "$3" ]; then
+      #   module -i ${@:3}
+      # fi
+    ;;
+    -u)
+      module_uninstall $2
+      # if [ -z "$3" ]; then
+      #   uninstall ${@:3}
+      # fi
     ;;
   esac
 }
 
-uninstall_module(){
+module_list() {
+  local list=""
+  for module in ${MODULE_NAMES[@]} ; do
+    if [ -r "$(module_path $module)" ]; then
+      list="$list $module"
+    fi
+  done
+  echo "Installed modules: $list"
+}
+
+module_install(){
   local module="$(this)_$1"
-  echo ".remove $module"
-  sudo rm "/usr/bin/$module"
+  if [ -r "$module" ]; then
+    echo ".add $module"
+    sudo cp $module /usr/bin
+  # else
+  #   my_exec sudo curl -o "/usr/bin/${module}" $(module_url $module)
+  #   if [ grep -Fxq "Not Found" "/usr/bin/${module}" ]; then
+  #     my_exec sudo rm "/usr/bin/${module}"
+  #   fi
+  fi
+}
+
+module_uninstall(){
+  local module="$(module_path $1)"
+  if [ -r $module ]; then
+    echo ".remove $1"
+    sudo rm $module
+  else
+    echo "${1^} module is not installed "
+  fi
 }
 
 create_file() {
   cat >> "$(filename)" <<-FILE
 
-# This is a Sample .limafile
+# This is a Sample $(filename)
 
 DEFAULT_FILE=docker-compose.yml
 TEST_FILE=docker-compose-test.yml
@@ -289,7 +313,7 @@ CONTAINER=web
 TEST_CONTAINER=web
 LOG=false
 FILE
-  chmod +x .limafile
+  chmod +x $(filename)
 }
 
 help() {
@@ -387,8 +411,6 @@ print() {
 TEXT
 }
 
-loadfile
-# source lima_ruby
+loadfile $(filename)
 declare FILE=$DEFAULT_FILE
-export -f loadfile filename this test_runner find_container is_running dct project_name my_exec
 main $@
