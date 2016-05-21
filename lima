@@ -1,19 +1,14 @@
 #!/bin/bash
-readonly VERSION=1.8.3
+readonly VERSION=2.0.0
+readonly MODULE_NAMES=('ruby')
 declare DEFAULT_FILE=docker-compose.yml
-declare TEST_FILE=docker-compose-test.yml
+declare TEST_FILE=docker-compose.yml
 declare CONTAINER=web
 declare TEST_CONTAINER=web
 declare LOG=false
 
 main() {
   case $1 in
-    rspec)
-      rspec ${@:2}
-    ;;
-    rake)
-      dc run $CONTAINER bundle exec rake ${@:2}
-    ;;
     logs)
       logs ${@:2}
     ;;
@@ -39,10 +34,13 @@ main() {
       kill ${@:2}
     ;;
     install)
-      install
+      install ${@:2}
     ;;
     uninstall)
-      uninstall
+      uninstall ${@:2}
+    ;;
+    module|modules)
+      module ${@:2}
     ;;
     file)
       create_file
@@ -59,7 +57,6 @@ main() {
     ;;
     --version|version|-v)
       local name=$(this)
-      # name=$(${name:0:1} | awk '{print toupper($0)})' ${name:1}
       echo "${name^} version $VERSION"
     ;;
     help|-h|-*)
@@ -68,14 +65,20 @@ main() {
     print)
       print
     ;;
-    *)
-      dc $@
+    dc)
+      dc ${@:2}
     ;;
   esac
+  load_modules
+  send_to_modules $@
 }
 
 this(){
   echo ${0##*/}
+}
+
+this_path(){
+  echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 }
 
 filename(){
@@ -91,10 +94,31 @@ project_name(){
 }
 
 loadfile() {
-  local filename=$(filename)
-  if [ -r $filename ]; then
-    . $filename
+  if [ -r $1 ]; then
+    . $1
   fi
+}
+
+load_modules() {
+  for module in ${MODULE_NAMES[@]} ; do
+    loadfile $(module_path $module)
+  done
+}
+
+module_path() {
+  echo "$(this_path)/$(this)_${1}"
+}
+
+module_url() {
+  echo "https://raw.githubusercontent.com/brunodles/lima/${VERSION}/${1}"
+}
+
+send_to_modules() {
+  for module in ${MODULE_NAMES[@]} ; do
+    if [ -r "$(module_path $module)" ]; then
+      (${module}_main $@)
+    fi
+  done
 }
 
 my_exec() {
@@ -144,27 +168,6 @@ is_running() {
   else
     echo "$(docker inspect -f {{.State.Running}} $1)"
   fi
-}
-
-rspec() {
-  case $1 in
-    up)
-      dct run --rm --name $(test_runner) $TEST_CONTAINER bash
-    ;;
-    rm)
-      # local cont="$(find_container $(test_runner))"
-      my_exec docker stop $(test_runner) >/dev/null 2>&1
-      my_exec docker rm $(test_runner) >/dev/null 2>&1
-    ;;
-    *)
-      local cont="$(find_container $(test_runner))"
-      if [ "$(is_running $cont)" == "true" ]; then
-        dce $(test_runner) bundle exec rspec $@
-      else
-        dct run $TEST_CONTAINER bundle exec rspec $@
-      fi
-    ;;
-  esac
 }
 
 logs() {
@@ -263,13 +266,72 @@ install() {
 }
 
 uninstall(){
+  for module in ${MODULE_NAMES[@]} ; do
+    module_uninstall $module
+  done
   sudo rm $0
+}
+
+module() {
+  case $1 in
+    "")
+      module_list
+    ;;
+    -l)
+      echo "Modules to install: ${MODULE_NAMES[@]}"
+    ;;
+    -i)
+      module_install $2
+      # if [ -z "$3" ]; then
+      #   module -i ${@:3}
+      # fi
+    ;;
+    -u)
+      module_uninstall $2
+      # if [ -z "$3" ]; then
+      #   uninstall ${@:3}
+      # fi
+    ;;
+  esac
+}
+
+module_list() {
+  local list=""
+  for module in ${MODULE_NAMES[@]} ; do
+    if [ -r "$(module_path $module)" ]; then
+      list="$list $module"
+    fi
+  done
+  echo "Installed modules: $list"
+}
+
+module_install(){
+  local module="$(this)_$1"
+  if [ -r "$module" ]; then
+    echo ".add $module"
+    sudo cp $module /usr/bin
+  # else
+  #   my_exec sudo curl -o "/usr/bin/${module}" $(module_url $module)
+  #   if [ grep -Fxq "Not Found" "/usr/bin/${module}" ]; then
+  #     my_exec sudo rm "/usr/bin/${module}"
+  #   fi
+  fi
+}
+
+module_uninstall(){
+  local module="$(module_path $1)"
+  if [ -r $module ]; then
+    echo ".remove $1"
+    sudo rm $module
+  else
+    echo "${1^} module is not installed "
+  fi
 }
 
 create_file() {
   cat >> "$(filename)" <<-FILE
 
-# This is a Sample .limafile
+# This is a Sample $(filename)
 
 DEFAULT_FILE=docker-compose.yml
 TEST_FILE=docker-compose-test.yml
@@ -277,7 +339,7 @@ CONTAINER=web
 TEST_CONTAINER=web
 LOG=false
 FILE
-  chmod +x .limafile
+  chmod +x $(filename)
 }
 
 help() {
@@ -291,9 +353,6 @@ Options:
   -t                      Use test file on docker-compose
 
 Helpers:
-  rspec                   Call docker-compose with test_file, so you just need to write the end of the command
-  rake                    Call docker-compose to execute a rake task
-
   logs                    Show default container logs
   logs all                Show all logs
   logs clear <container>  Clear logs from container
@@ -319,10 +378,15 @@ Helpers:
   uninstall               Remove this from /usr/bin
   file                    Create the helper file, this will enable you to setup this tool
 
+  module                  List installed modules
+  module -l               List all installable modules
+  module -i <name>        Install a module
+  module -u <name>        Uninstall a module
+
   help                    Show this help
   version                 Show the version of this helper
 
-  <any>                   Will be passed into docker-compose
+  dc                      Will be passed into docker-compose
 
 TEXT
 }
@@ -378,6 +442,6 @@ print() {
 TEXT
 }
 
-loadfile
+loadfile $(filename)
 declare FILE=$DEFAULT_FILE
 main $@
