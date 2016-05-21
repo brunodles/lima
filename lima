@@ -1,5 +1,6 @@
 #!/bin/bash
 readonly VERSION=2.0.0
+readonly MODULE_NAMES=('ruby')
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose.yml
 declare CONTAINER=web
@@ -38,6 +39,9 @@ main() {
     uninstall)
       uninstall ${@:2}
     ;;
+    module|modules)
+      module ${@:2}
+    ;;
     file)
       create_file
     ;;
@@ -65,7 +69,8 @@ main() {
       dc ${@:2}
     ;;
   esac
-  $(this_path)/lima_ruby $@
+  load_modules
+  send_to_modules $@
 }
 
 this(){
@@ -89,10 +94,31 @@ project_name(){
 }
 
 loadfile() {
-  local filename=$(filename)
-  if [ -r $filename ]; then
-    . $filename
+  if [ -r $1 ]; then
+    . $1
   fi
+}
+
+load_modules() {
+  for module in ${MODULE_NAMES[@]} ; do
+    loadfile $(module_path $module)
+  done
+}
+
+module_path() {
+  echo "$(this_path)/$(this)_${1}"
+}
+
+module_url() {
+  echo "https://raw.githubusercontent.com/brunodles/lima/${VERSION}/${1}"
+}
+
+send_to_modules() {
+  for module in ${MODULE_NAMES[@]} ; do
+    if [ -r "$(module_path $module)" ]; then
+      (${module}_main $@)
+    fi
+  done
 }
 
 my_exec() {
@@ -351,6 +377,11 @@ Helpers:
   install                 Copy this bash to /usr/bin
   uninstall               Remove this from /usr/bin
   file                    Create the helper file, this will enable you to setup this tool
+
+  module                  List installed modules
+  module -l               List all installable modules
+  module -i <name>        Install a module
+  module -u <name>        Uninstall a module
 
   help                    Show this help
   version                 Show the version of this helper

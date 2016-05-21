@@ -1,5 +1,5 @@
 #!/bin/bash
-main() {
+ruby_main() {
   case $1 in
     rspec)
       rspec ${@:2}
@@ -7,8 +7,11 @@ main() {
     rake)
       dc run $CONTAINER bundle exec rake ${@:2}
     ;;
+    kill)
+      rspec rm
+    ;;
     help|-h)
-      help
+      ruby_help
     ;;
   esac
 }
@@ -34,11 +37,7 @@ rspec() {
   esac
 }
 
-kill() {
-  rspec rm
-}
-
-help() {
+ruby_help() {
   cat <<-TEXT
 Ruby-Helpers:
   rspec                   Call docker-compose with test_file, so you just need to write the end of the command
@@ -48,4 +47,4 @@ TEXT
 
 # loadfile
 # source lima
-main $@
+# main $@
