@@ -1,7 +1,7 @@
 #!/bin/bash
 readonly VERSION=2.0.0
 declare DEFAULT_FILE=docker-compose.yml
-declare TEST_FILE=docker-compose-test.yml
+declare TEST_FILE=docker-compose.yml
 declare CONTAINER=web
 declare TEST_CONTAINER=web
 declare LOG=false
