@@ -4,7 +4,7 @@ This is a simple tool to wrap *docker* and *docker-compose* commands.
 
 ## Motivation
 
-I've start use docker-compose and it's lot easier than the default *docker* command. But when I use *docker-compose* for development it's common to send a lot of commands to the container, sometimes I get myself writing `docker-compose -f docker-compose.test.yml -p "$(pwd)test" run bundle exec rspec <test path>`. Well it's a lot of things, of course I wrote some aliases but in some cases I need a more complex script.
+I've start use docker-compose and it's lot easier than the default *docker* command. But when I use *docker-compose* for development it's common to send a lot of commands to the container, sometimes I get myself writing `docker-compose -f docker-compose.test.yml -p "$(pwd)test" run webserver bundle exec rspec <test path>`. Well it's a lot of things, of course I wrote some aliases but in some cases I need a more complex script.
 When I need this script I need to go on internet to find it again.
 
 ## Installation
