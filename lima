@@ -1,9 +1,8 @@
 #!/bin/bash
-readonly VERSION=2.0.0
+readonly VERSION=2.0.1
 readonly MODULE_NAMES=('ruby')
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose.yml
-declare CONTAINER=web
 declare TEST_CONTAINER=web
 declare LOG=false
 
@@ -45,14 +44,10 @@ main() {
     file)
       create_file
     ;;
-    env)
-      echo DEFAULT_FILE $DEFAULT_FILE
-      echo TEST_FILE $TEST_FILE
-      echo CONTAINER $CONTAINER
-    ;;
     -t)
-      FILE=$TEST_FILE
-      CONTAINER=$TEST_CONTAINER
+      dcFile=$TEST_FILE
+      dcProject="$(project_name)test"
+      dcContainer=$TEST_CONTAINER
       main ${@:2}
     ;;
     --version|version|-v)
@@ -129,7 +124,7 @@ my_exec() {
 }
 
 dc() {
-  my_exec docker-compose -f $FILE $@
+  my_exec docker-compose -f $dcFile -p "$dcProject" $@
 }
 
 dcd() {
@@ -173,7 +168,7 @@ is_running() {
 logs() {
   case $1 in
     "")
-      dc logs -f --tail=100 $CONTAINER
+      dc logs -f --tail=100 $dcContainer
     ;;
     all)
       dc logs -f --tail=100
@@ -212,7 +207,7 @@ clear_logs_from_container() {
 run() {
   case $1 in
     "")
-      dc run $CONTAINER bash
+      dc run $dcContainer bash
     ;;
     *)
       dc run $@
@@ -247,7 +242,6 @@ stop() {
 kill() {
   dcd kill $@
   dct kill $@
-  rspec rm
 }
 
 clean() {
@@ -443,5 +437,7 @@ TEXT
 }
 
 loadfile $(filename)
-declare FILE=$DEFAULT_FILE
+declare dcContainer=$CONTAINER
+declare dcFile=$DEFAULT_FILE
+declare dcProject=$(project_name)
 main $@
