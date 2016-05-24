@@ -45,11 +45,6 @@ main() {
     file)
       create_file
     ;;
-    env)
-      echo DEFAULT_FILE $DEFAULT_FILE
-      echo TEST_FILE $TEST_FILE
-      echo CONTAINER $CONTAINER
-    ;;
     -t)
       FILE=$TEST_FILE
       CONTAINER=$TEST_CONTAINER
