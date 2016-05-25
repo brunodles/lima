@@ -124,7 +124,11 @@ my_exec() {
 }
 
 dc() {
-  my_exec docker-compose -f $dcFile -p "$dcProject" $@
+  if [ -r $FILE ]; then
+    my_exec docker-compose -f $FILE -p "$dcProject" $@
+  else
+    my_exec docker-compose -p "$dcProject" $@
+  fi
 }
 
 dcd() {
