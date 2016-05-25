@@ -129,7 +129,11 @@ my_exec() {
 }
 
 dc() {
-  my_exec docker-compose -f $FILE $@
+  if [ -r $FILE ]; then
+    my_exec docker-compose -f $FILE $@
+  else
+    my_exec docker-compose $@
+  fi
 }
 
 dcd() {
