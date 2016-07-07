@@ -4,8 +4,14 @@ ruby_main() {
     rspec)
       rspec ${@:2}
     ;;
+    bundle)
+      dc run $dcContainer bundle ${@:2}
+    ;;
+    bexec)
+      dc run $dcContainer bundle exec ${@:2}
+    ;;
     rake)
-      dc run $CONTAINER bundle exec rake ${@:2}
+      dc run $dcContainer bundle exec rake ${@:2}
     ;;
     kill)
       rspec rm
@@ -40,8 +46,10 @@ rspec() {
 ruby_help() {
   cat <<-TEXT
 Ruby-Helpers:
-  rspec                   Call docker-compose with test_file, so you just need to write the end of the command
-  rake                    Call docker-compose to execute a rake task
+  rspec <command>         Call docker-compose with test_file, so you just need to write the end of the command
+  bundle <command>        Call docker-compose to execute bundle, on the default conatiner
+  bexec <command>         Call docker-compose to execute a rake task, on the default conatiner
+  rake <command>          Call docker-compose to execute a rake task, on the default conatiner
 TEXT
 }
 
