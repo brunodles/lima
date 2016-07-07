@@ -215,7 +215,7 @@ run() {
     "")
       dc run $dcContainer bash
     ;;
-    -p)
+    -P)
       run --service-ports ${@:2}
     ;;
     *)
