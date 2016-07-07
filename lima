@@ -1,5 +1,5 @@
 #!/bin/bash
-readonly VERSION=2.0.2
+readonly VERSION=2.1.5
 readonly MODULE_NAMES=('ruby')
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose.yml
@@ -132,18 +132,20 @@ dc() {
 }
 
 dcd() {
-  my_exec docker-compose -f $DEFAULT_FILE $@
+  dcFile=$DEFAULT_FILE
+  dc $@
 }
 
 dct() {
-  my_exec docker-compose -f $TEST_FILE -p "$(project_name)test" $@
+  dcFile=$TEST_FILE
+  dcProject="$(project_name)test"
+  dc $@
 }
 
 dce() {
   local cont=$(find_container $1)
   local cmd=$(find_command ${@:2})
-  echo 'docker exec -it '$cont $cmd
-  docker exec -it $cont $cmd
+  my_exec docker exec -it $cont $cmd
 }
 
 find_command() {
@@ -156,7 +158,7 @@ find_command() {
 }
 
 find_container() {
-  local cont=$(ps | grep $1)
+  local cont=$(dc ps | grep $1)
   cont=${cont/%\ */}
   echo $cont
 }
@@ -212,6 +214,9 @@ run() {
   case $1 in
     "")
       dc run $dcContainer bash
+    ;;
+    -p)
+      run --service-ports ${@:2}
     ;;
     *)
       dc run $@
