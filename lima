@@ -1,5 +1,5 @@
 #!/bin/bash
-readonly VERSION=2.1.5
+readonly VERSION=2.2.6
 readonly MODULE_NAMES=('ruby')
 declare DEFAULT_FILE=docker-compose.yml
 declare TEST_FILE=docker-compose.yml
